@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=attendance_db'
+      - 'POSTGRES_PASSWORD=password'
+      - 'POSTGRES_USER=sa'
+    ports:
+      - '5432:5432'
+  pgadmin:
+    container_name: session_pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'admin@localhost.com'
+      PGADMIN_DEFAULT_PASSWORD: 'password'
+      PGADMIN_PORT: 5050
+    ports:
+      - '5050:80'
