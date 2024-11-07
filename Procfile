@@ -1,1 +1,1 @@
-web: java -Xmx512m -Xss512k -XX:+UseContainerSupport -Dserver.port=$PORT -jar target/*.jar --spring.profiles.active=prod
+web: java -Dserver.port=$PORT $JAVA_OPTS -jar target/*.jar
