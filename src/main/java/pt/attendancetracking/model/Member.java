@@ -26,11 +26,21 @@ public class Member {
     @Column(name = "name")
     private String name;
 
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false, length = 120)
+    private String password;
+
     @Column(name = "email")
     private String email;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
     private Package activePackage;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
 
     @ToString.Exclude
     @JsonIgnoreProperties
