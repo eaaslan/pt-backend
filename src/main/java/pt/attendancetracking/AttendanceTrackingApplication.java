@@ -1,14 +1,10 @@
 package pt.attendancetracking;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.JdbcConnectionDetails;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.repository.MemberRepository;
@@ -19,6 +15,15 @@ public class AttendanceTrackingApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(AttendanceTrackingApplication.class, args);
+
+        SpringApplication app = new SpringApplication(AttendanceTrackingApplication.class);
+
+        // Set prod profile for Heroku
+        if (System.getenv("DYNO") != null) {
+            app.setAdditionalProfiles("prod");
+        }
+
+        app.run(args);
     }
 
     @Bean
