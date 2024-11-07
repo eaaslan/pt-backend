@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import pt.attendancetracking.model.Appointment;
 import pt.attendancetracking.model.AppointmentStatus;
 import pt.attendancetracking.model.Member;
-import pt.attendancetracking.model.PackageStatus;
 import pt.attendancetracking.repository.AppointmentRepository;
 import pt.attendancetracking.repository.MemberRepository;
 import pt.attendancetracking.util.TimeSlotUtil;
 
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,38 +22,34 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MemberRepository memberRepository;
 
-    @Transactional
-   public Optional<Appointment> scheduleAppointment(Long memberId, LocalDateTime appointmentTime){
+    public Appointment getAppointmentById(Long id){
+        return appointmentRepository.findById(id).orElseThrow();
+    }
 
-      if( appointmentRepository.existsByAppointmentTime(appointmentTime)) {
-          return Optional.empty();
-      }
-      Member member = memberRepository.findById(memberId).orElseThrow();
-      Appointment appointment = Appointment.builder()
-              .appointmentTime(appointmentTime)
-              .status(AppointmentStatus.SCHEDULED)
-              .member(member)
-                .build();
-       member.getAppointments().add(appointment);
-      appointmentRepository.save(appointment);
-
-      return Optional.of(appointment);
+    public List<Appointment> getMemberAllAppointment(Long id){
+        return appointmentRepository.findAppointmentsByMemberId(id);
     }
 
     @Transactional
-    public Optional<Appointment> TestScheduleAppointment(Long memberId, LocalDateTime appointmentTime){
-
-        if( appointmentRepository.existsByAppointmentTime(appointmentTime)) {
-            System.out.println("There is already appointment!!");
-            return Optional.empty();
+    public Optional<Appointment> scheduleAppointment(Long memberId, LocalDateTime appointmentTime) {
+        if (!TimeSlotUtil.isValidBusinessHour(appointmentTime)) {
+            throw new IllegalArgumentException("Appointment can only be scheduled during business hours (8 AM - 5 PM)");
         }
-        Member member = memberRepository.findById(memberId).orElseThrow();
+
+        if (appointmentRepository.existsByAppointmentTime(appointmentTime)) {
+            throw new IllegalStateException("This time slot is already booked");
+        }
+
+        Member member = memberRepository.findById(memberId).orElseThrow(() ->
+                new IllegalArgumentException("Member not found with id: " + memberId));
+
         Appointment appointment = Appointment.builder()
                 .appointmentTime(appointmentTime)
-                .status(AppointmentStatus.CHECKED_IN)
-                .member(member)
+                .status(AppointmentStatus.SCHEDULED)
                 .build();
-        member.getAppointments().add(appointment);
+
+        member.addAppointments(appointment);
+
         appointmentRepository.save(appointment);
 
         return Optional.of(appointment);
@@ -63,22 +59,20 @@ public class AppointmentService {
     @Transactional
     public Optional<Appointment> checkIn(Long memberId, LocalDateTime checkInTime) {
         if (!TimeSlotUtil.isValidBusinessHour(checkInTime)) {
-            throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 5 PM)");
+            throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 22 PM)");
         }
+
+        System.out.println(checkInTime);
 
         // Check-in zamanını en yakın saate yuvarla
         LocalDateTime roundedTime = TimeSlotUtil.roundToNearestHour(checkInTime);
 
-        // 1. O zaman diliminde başka bir üyenin randevusu var mı kontrol et
-        if (appointmentRepository.existsAppointmentForTimeByOtherMember(roundedTime, memberId)) {
-            throw new RuntimeException("This time slot is already booked by another member");
-        }
+        System.out.println(roundedTime);
 
         // 2. O zaman diliminde zaten check-in yapılmış bir randevu var mı kontrol et
         if (appointmentRepository.existsCheckedInAppointmentForTime(roundedTime)) {
             throw new RuntimeException("There is already a checked-in appointment for this time slot");
         }
-
         // 3. Üyenin SCHEDULED durumunda randevusu var mı kontrol et
         Appointment appointment = appointmentRepository
                 .findAppointmentByMemberAndTimeScheduledStatus(memberId, roundedTime)

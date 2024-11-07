@@ -1,8 +1,8 @@
 package pt.attendancetracking.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -12,14 +12,16 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"member"})
 public class Appointment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "appointment_seq_generator")
+    @SequenceGenerator(name = "appointment_seq_generator", sequenceName = "appointment_id_seq", allocationSize = 1)
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = {
+    @ManyToOne(fetch = FetchType.LAZY,cascade = {
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.DETACH,
@@ -27,12 +29,13 @@ public class Appointment {
     })
     private Member member;
 
-    @Column(name = "appointment_time")
+    @Column(name = "appointment_time",nullable = false)
     private LocalDateTime appointmentTime;
 
     @Column(name = "checkin_time")
     private LocalDateTime checkInTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AppointmentStatus status;
 }

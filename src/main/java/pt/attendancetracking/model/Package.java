@@ -1,6 +1,8 @@
 // Package.java
 package pt.attendancetracking.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"member"})
 public class Package {
 
 
@@ -19,6 +22,7 @@ public class Package {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")

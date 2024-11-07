@@ -7,7 +7,7 @@ import java.time.Duration;
 public class TimeSlotUtil {
     // Constants for business rules
     private static final LocalTime BUSINESS_HOURS_START = LocalTime.of(8, 0);
-    private static final LocalTime BUSINESS_HOURS_END = LocalTime.of(17, 0);
+    private static final LocalTime BUSINESS_HOURS_END = LocalTime.of(22, 0);
     private static final Duration SLOT_DURATION = Duration.ofHours(1);
 
     /**

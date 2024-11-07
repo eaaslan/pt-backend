@@ -1,0 +1,12 @@
+# curl -X POST http://localhost:8080/api/qr/check-in/1
+#-H "Content-Type: application/json"
+#-d '{"qrCode": "GYM_LOCATION_001"}'
+POST http://localhost:8080/api/qr/check-in/1
+Content-Type: application/json
+
+{
+  "qrCode": "GYM_LOCATION_001"
+}
+
+###
+

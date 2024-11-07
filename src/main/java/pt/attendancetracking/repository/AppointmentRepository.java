@@ -38,4 +38,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("appointmentTime") LocalDateTime appointmentTime,
             @Param("memberId") Long memberId
     );
+
+    @Query("SELECT a FROM Appointment a WHERE a.member.id = :memberId")
+    List<Appointment> findAppointmentsByMemberId(@Param("memberId") Long memberId);
 }
