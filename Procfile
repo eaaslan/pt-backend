@@ -1,1 +1,1 @@
-web: java -jar target/attendance-tracking-0.0.1-SNAPSHOT.jar
+web: java -Xmx512m -Xss512k -XX:+UseContainerSupport -Dserver.port=$PORT -jar target/*.jar --spring.profiles.active=prod
