@@ -12,16 +12,13 @@ import pt.attendancetracking.repository.MemberRepository;
 @SpringBootApplication
 public class AttendanceTrackingApplication {
 
-
     public static void main(String[] args) {
-        SpringApplication.run(AttendanceTrackingApplication.class, args);
-
         SpringApplication app = new SpringApplication(AttendanceTrackingApplication.class);
 
         // Set prod profile for Heroku
-        if (System.getenv("DYNO") != null) {
-            app.setAdditionalProfiles("prod");
-        }
+//        if (System.getenv("DYNO") != null) {
+//            app.setAdditionalProfiles("prod");
+//        }
 
         app.run(args);
     }
@@ -69,5 +66,4 @@ public class AttendanceTrackingApplication {
             }
         };
     }
-
 }

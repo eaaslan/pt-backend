@@ -1,9 +1,8 @@
 package pt.attendancetracking.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,8 @@ public class Member {
 
     @ToString.Exclude
     @JsonIgnoreProperties
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Appointment> appointments = new ArrayList<>();
 
     public void setActivePackage(Package activePackage) {
@@ -54,15 +54,15 @@ public class Member {
         }
     }
 
-    public void addAppointments(Appointment appointment){
-        if(appointments==null){
-            appointments=new ArrayList<>();
+    public void addAppointments(Appointment appointment) {
+        if (appointments == null) {
+            appointments = new ArrayList<>();
         }
         appointments.add(appointment);
         appointment.setMember(this);
     }
 
-    public void removeAppointment(Appointment appointment){
+    public void removeAppointment(Appointment appointment) {
         if (appointments != null) {
             appointments.remove(appointment);
             appointment.setMember(null);
