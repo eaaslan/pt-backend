@@ -78,7 +78,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5500",
                 "http://127.0.0.1:5500",
-                "http://192.168.1.13:5500"  // Your IP
+                "http://192.168.1.13:5500",
+                "https://pt-frontend-gtju.vercel.app"// Your IP
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
