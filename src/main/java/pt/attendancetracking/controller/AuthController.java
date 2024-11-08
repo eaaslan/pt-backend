@@ -21,7 +21,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true")
+@CrossOrigin(origins = {
+        "http://127.0.0.1:5500",
+        "https://pt-frontend-gtju.vercel.app"
+}, allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
