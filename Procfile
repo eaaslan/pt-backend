@@ -1,1 +1,1 @@
-web: java -jar -Dserver.port=\$PORT \$JAVA_OPTS target/attendance-tracking-0.0.1-SNAPSHOT.jar
+web: java -jar -Dserver.port=$PORT $JAVA_OPTS target/attendance-tracking-0.0.1-SNAPSHOT.jar
