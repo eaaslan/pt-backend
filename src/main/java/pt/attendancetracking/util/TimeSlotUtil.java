@@ -1,8 +1,8 @@
 package pt.attendancetracking.util;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Duration;
 
 public class TimeSlotUtil {
     // Constants for business rules
@@ -16,15 +16,16 @@ public class TimeSlotUtil {
     public static LocalDateTime normalizeToHourSlot(LocalDateTime dateTime) {
         return dateTime.withMinute(0).withSecond(0).withNano(0);
     }
-/**
- * Round to closest hour <= 30
- */
-public static LocalDateTime roundToNearestHour(LocalDateTime time) {
-    LocalDateTime previousHour = time.withMinute(0).withSecond(0).withNano(0);
-    LocalDateTime nextHour = previousHour.plusHours(1);
 
-    return time.getMinute() <= 30 ? previousHour : nextHour;
-}
+    /**
+     * Round to closest hour <= 30
+     */
+    public static LocalDateTime roundToNearestHour(LocalDateTime time) {
+        LocalDateTime previousHour = time.withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime nextHour = previousHour.plusHours(1);
+
+        return time.getMinute() <= 30 ? previousHour : nextHour;
+    }
 
 
     /**
@@ -45,6 +46,8 @@ public static LocalDateTime roundToNearestHour(LocalDateTime time) {
      * Checks if the given time falls within business hours
      */
     public static boolean isValidBusinessHour(LocalDateTime dateTime) {
+        System.out.println("Checking business hours for: " + dateTime);
+        System.out.println("In timezone: " + java.time.ZoneId.systemDefault());
         LocalTime time = dateTime.toLocalTime();
         return time.isBefore(BUSINESS_HOURS_END) &&
                 time.isAfter(BUSINESS_HOURS_START);

@@ -49,7 +49,7 @@ Content-Type: application/json
 #  'https://pt-backend-42d98685b856.herokuapp.com/api/auth/login'
 #  -H 'Content-Type: application/json'
 #  -d '{"username": "member", "password": "member123"}'
-POST https://pt-backend-42d98685b856.herokuapp.com/api/auth/login
+POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
 Content-Type: application/json
 
 {
@@ -64,8 +64,16 @@ Content-Type: application/json
 #  -H 'Content-Type: application/json'
 #  -H 'Cookie: JSESSIONID=your_session_id_from_login'
 #  -d '{"qrCode": "GYM_LOCATION_001"}'
+
+###
+
+# curl -X POST
+#  'http://localhost:8080/api/qr/check-in/3'
+#  -H 'Content-Type: application/json'
+#  -u 'member:member123'
+#  -d '{"qrCode": "GYM_LOCATION_001"}'
 POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
-Cookie: JSESSIONID=your_session_id_from_login
+Authorization: Basic admin admin123
 Content-Type: application/json
 
 {

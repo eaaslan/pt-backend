@@ -10,7 +10,6 @@ import pt.attendancetracking.repository.AppointmentRepository;
 import pt.attendancetracking.repository.MemberRepository;
 import pt.attendancetracking.util.TimeSlotUtil;
 
-import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,11 +21,11 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MemberRepository memberRepository;
 
-    public Appointment getAppointmentById(Long id){
+    public Appointment getAppointmentById(Long id) {
         return appointmentRepository.findById(id).orElseThrow();
     }
 
-    public List<Appointment> getMemberAllAppointment(Long id){
+    public List<Appointment> getMemberAllAppointment(Long id) {
         return appointmentRepository.findAppointmentsByMemberId(id);
     }
 
@@ -56,30 +55,66 @@ public class AppointmentService {
     }
 
     //todo we just specify our check in time but we use time.now in real test
+//    @Transactional
+//    public Optional<Appointment> checkIn(Long memberId, LocalDateTime checkInTime) {
+//        if (!TimeSlotUtil.isValidBusinessHour(checkInTime)) {
+//            throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 22 PM)");
+//        }
+//
+//        System.out.println(checkInTime);
+//
+//        // Check-in zamanını en yakın saate yuvarla
+//        LocalDateTime roundedTime = TimeSlotUtil.roundToNearestHour(checkInTime);
+//
+//        System.out.println(roundedTime);
+//
+//        // 2. O zaman diliminde zaten check-in yapılmış bir randevu var mı kontrol et
+//        if (appointmentRepository.existsCheckedInAppointmentForTime(roundedTime)) {
+//            throw new RuntimeException("There is already a checked-in appointment for this time slot");
+//        }
+//        // 3. Üyenin SCHEDULED durumunda randevusu var mı kontrol et
+//        Appointment appointment = appointmentRepository
+//                .findAppointmentByMemberAndTimeScheduledStatus(memberId, roundedTime)
+//                .orElseThrow(() -> new RuntimeException("No scheduled appointment found for rounded time: " + roundedTime));
+//
+//        // 4. Randevuyu güncelle
+//        appointment.setCheckInTime(checkInTime);
+//        appointment.setStatus(AppointmentStatus.CHECKED_IN);
+//        appointmentRepository.save(appointment);
+//
+//        return Optional.of(appointment);
+//    }
+
     @Transactional
     public Optional<Appointment> checkIn(Long memberId, LocalDateTime checkInTime) {
-        if (!TimeSlotUtil.isValidBusinessHour(checkInTime)) {
+        // If checkInTime is null, use current time in system default timezone
+        LocalDateTime currentTime = checkInTime != null ? checkInTime : LocalDateTime.now();
+
+        // Add logging to debug timezone issues
+        System.out.println("Current system time: " + currentTime);
+        System.out.println("System default timezone: " + java.time.ZoneId.systemDefault());
+
+        if (!TimeSlotUtil.isValidBusinessHour(currentTime)) {
             throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 22 PM)");
         }
 
-        System.out.println(checkInTime);
+        // Round the current time to nearest hour
+        LocalDateTime roundedTime = TimeSlotUtil.roundToNearestHour(currentTime);
 
-        // Check-in zamanını en yakın saate yuvarla
-        LocalDateTime roundedTime = TimeSlotUtil.roundToNearestHour(checkInTime);
+        System.out.println("Rounded time: " + roundedTime);
 
-        System.out.println(roundedTime);
-
-        // 2. O zaman diliminde zaten check-in yapılmış bir randevu var mı kontrol et
+        // Check if there's already a checked-in appointment
         if (appointmentRepository.existsCheckedInAppointmentForTime(roundedTime)) {
             throw new RuntimeException("There is already a checked-in appointment for this time slot");
         }
-        // 3. Üyenin SCHEDULED durumunda randevusu var mı kontrol et
+
+        // Find scheduled appointment
         Appointment appointment = appointmentRepository
                 .findAppointmentByMemberAndTimeScheduledStatus(memberId, roundedTime)
                 .orElseThrow(() -> new RuntimeException("No scheduled appointment found for rounded time: " + roundedTime));
 
-        // 4. Randevuyu güncelle
-        appointment.setCheckInTime(checkInTime);
+        // Update appointment
+        appointment.setCheckInTime(currentTime);
         appointment.setStatus(AppointmentStatus.CHECKED_IN);
         appointmentRepository.save(appointment);
 
