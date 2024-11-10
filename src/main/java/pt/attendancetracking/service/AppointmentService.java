@@ -8,11 +8,13 @@ import pt.attendancetracking.model.AppointmentStatus;
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.repository.AppointmentRepository;
 import pt.attendancetracking.repository.MemberRepository;
-import pt.attendancetracking.util.TimeSlotUtil;
+import pt.attendancetracking.util.TimeUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static pt.attendancetracking.util.TimeUtil.getCurrentTimeInUTCPlus3;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class AppointmentService {
 
     @Transactional
     public Optional<Appointment> scheduleAppointment(Long memberId, LocalDateTime appointmentTime) {
-        if (!TimeSlotUtil.isValidBusinessHour(appointmentTime)) {
+        if (!TimeUtil.isValidBusinessHour(appointmentTime)) {
             throw new IllegalArgumentException("Appointment can only be scheduled during business hours (8 AM - 5 PM)");
         }
 
@@ -87,19 +89,20 @@ public class AppointmentService {
 
     @Transactional
     public Optional<Appointment> checkIn(Long memberId, LocalDateTime checkInTime) {
+
         // If checkInTime is null, use current time in system default timezone
-        LocalDateTime currentTime = checkInTime != null ? checkInTime : LocalDateTime.now();
+        LocalDateTime currentTime = checkInTime != null ? checkInTime : getCurrentTimeInUTCPlus3();
 
         // Add logging to debug timezone issues
-        System.out.println("Current system time: " + currentTime);
-        System.out.println("System default timezone: " + java.time.ZoneId.systemDefault());
+        System.out.println("Current time: " + currentTime);
 
-        if (!TimeSlotUtil.isValidBusinessHour(currentTime)) {
+        if (!TimeUtil.isValidBusinessHour(currentTime)) {
             throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 22 PM)");
         }
 
         // Round the current time to nearest hour
-        LocalDateTime roundedTime = TimeSlotUtil.roundToNearestHour(currentTime);
+        LocalDateTime roundedTime = TimeUtil.roundToNearestHour(currentTime);
+
 
         System.out.println("Rounded time: " + roundedTime);
 
@@ -111,7 +114,7 @@ public class AppointmentService {
         // Find scheduled appointment
         Appointment appointment = appointmentRepository
                 .findAppointmentByMemberAndTimeScheduledStatus(memberId, roundedTime)
-                .orElseThrow(() -> new RuntimeException("No scheduled appointment found for rounded time: " + roundedTime));
+                .orElseThrow(() -> new RuntimeException("No scheduled appointment found for : " + roundedTime));
 
         // Update appointment
         appointment.setCheckInTime(currentTime);

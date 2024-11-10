@@ -14,7 +14,6 @@ import pt.attendancetracking.service.AppointmentService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -23,8 +22,8 @@ import java.util.Map;
 @CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"})
 public class QrScanController {
 
-    private final AppointmentService appointmentService;
     private static final String GYM_QR_CODE = "GYM_LOCATION_001";
+    private final AppointmentService appointmentService;
 
     @GetMapping(value = "/generate", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> generateQrCode() {
@@ -54,43 +53,33 @@ public class QrScanController {
     public ResponseEntity<?> handleQrCheckIn(
             @PathVariable Long memberId,
             @RequestBody QrCheckInRequest request
-    ){
+    ) {
 
-        if(!GYM_QR_CODE.equals(request.getQrCode())){
+        if (!GYM_QR_CODE.equals(request.getQrCode())) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "error","Invalid qr code"
+                    "error", "Invalid qr code"
             ));
         }
-        try{
-            return appointmentService.checkIn(memberId, LocalDateTime.now())
-                    .map( appointment -> ResponseEntity.ok(Map.of(
-                            "message","Check in successful",
-                            "appointment",appointment,
-                            "checkInTime",appointment.getCheckInTime()
+        try {
+            return appointmentService.checkIn(memberId, request.getClientLocalTime())
+                    .map(appointment -> ResponseEntity.ok(Map.of(
+                            "message", "Check in successful",
+                            "appointment", appointment,
+                            "checkInTime", appointment.getCheckInTime()
                     ))).orElse(ResponseEntity.badRequest().body(Map.of(
 
-                            "error","check in failed"
+                            "error", "check in failed"
                     )));
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "error",e.getMessage()
+                    "error", e.getMessage()
 
 
             ));
         }
-
-
 
 
     }
-
-
-
-
-
-
-
-
 
 
 }

@@ -12,16 +12,17 @@ import pt.attendancetracking.repository.MemberRepository;
 @SpringBootApplication
 public class AttendanceTrackingApplication {
 
+
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(AttendanceTrackingApplication.class);
+        SpringApplication.run(AttendanceTrackingApplication.class, args);
 
         // Set prod profile for Heroku
 //        if (System.getenv("DYNO") != null) {
 //            app.setAdditionalProfiles("prod");
 //        }
 
-        app.run(args);
     }
+
 
     @Bean
     CommandLineRunner initUsers(MemberRepository memberRepository, PasswordEncoder encoder) {

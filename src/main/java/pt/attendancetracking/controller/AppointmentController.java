@@ -1,7 +1,6 @@
 package pt.attendancetracking.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +55,7 @@ public class AppointmentController {
 
         System.out.println(checkInTime);
         try {
-            Optional<Appointment> appointment = appointmentService.checkIn(memberId,checkInTime );
+            Optional<Appointment> appointment = appointmentService.checkIn(memberId, checkInTime);
 
             return appointment
                     .map(a -> ResponseEntity.ok(Map.of(
@@ -80,25 +79,25 @@ public class AppointmentController {
     public ResponseEntity<?> scheduleAppointment(
             @PathVariable Long memberId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime appointmentTime) {
-        try{
-           Optional<Appointment> appointment= appointmentService.scheduleAppointment(memberId, appointmentTime);
-           return  appointment
-                   .map(a->
-               ResponseEntity.ok(Map.of(
-                       "message","schedule is successful"
-                       , "appointment",a,
-                       "appointmentTime",a.getAppointmentTime()
+        try {
+            Optional<Appointment> appointment = appointmentService.scheduleAppointment(memberId, appointmentTime);
+            return appointment
+                    .map(a ->
+                            ResponseEntity.ok(Map.of(
+                                    "message", "schedule is successful"
+                                    , "appointment", a,
+                                    "appointmentTime", a.getAppointmentTime()
 
-               ))
-           ).orElse( ResponseEntity.badRequest().body(Map.of(
-                   "error","check-in failed"
-                           ))
+                            ))
+                    ).orElse(ResponseEntity.badRequest().body(Map.of(
+                                    "error", "check-in failed"
+                            ))
 
-                   );
+                    );
 
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "error",e.getMessage()
+                    "error", e.getMessage()
             ));
         }
     }

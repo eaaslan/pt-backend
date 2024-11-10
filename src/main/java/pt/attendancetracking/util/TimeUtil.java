@@ -1,14 +1,38 @@
 package pt.attendancetracking.util;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 
-public class TimeSlotUtil {
+public class TimeUtil {
     // Constants for business rules
     private static final LocalTime BUSINESS_HOURS_START = LocalTime.of(8, 0);
     private static final LocalTime BUSINESS_HOURS_END = LocalTime.of(22, 0);
     private static final Duration SLOT_DURATION = Duration.ofHours(1);
+
+
+    /**
+     * Checks if the given time falls within business hours
+     */
+    public static boolean isValidBusinessHour(LocalDateTime dateTime) {
+        System.out.println("Checking business hours for: " + dateTime);
+        System.out.println("In timezone: " + java.time.ZoneId.systemDefault());
+        LocalTime time = dateTime.toLocalTime();
+        return time.isBefore(BUSINESS_HOURS_END) &&
+                time.isAfter(BUSINESS_HOURS_START);
+    }
+
+    public static LocalDateTime getCurrentTimeInUTCPlus3() {
+        return ZonedDateTime.now(ZoneId.of("UTC+03:00")).toLocalDateTime();
+    }
+
+    public static LocalDateTime convertToUTC(String clientLocalTime, String clientTimeZone) {
+        // Parse the local time sent by the client
+        LocalDateTime localTime = LocalDateTime.parse(clientLocalTime);
+
+        // Convert to UTC using the client's timezone
+        ZonedDateTime zonedTime = localTime.atZone(ZoneId.of(clientTimeZone));
+        return zonedTime.withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
 
     /**
      * Normalizes a datetime to the start of its hour slot
@@ -42,16 +66,6 @@ public class TimeSlotUtil {
         return getSlotStart(dateTime).plus(SLOT_DURATION);
     }
 
-    /**
-     * Checks if the given time falls within business hours
-     */
-    public static boolean isValidBusinessHour(LocalDateTime dateTime) {
-        System.out.println("Checking business hours for: " + dateTime);
-        System.out.println("In timezone: " + java.time.ZoneId.systemDefault());
-        LocalTime time = dateTime.toLocalTime();
-        return time.isBefore(BUSINESS_HOURS_END) &&
-                time.isAfter(BUSINESS_HOURS_START);
-    }
 
     public static boolean isValidToCheckIn(LocalDateTime appointmentTime, LocalDateTime checkInTime) {
         LocalDateTime roundedCheckInTime = roundToNearestHour(checkInTime);
