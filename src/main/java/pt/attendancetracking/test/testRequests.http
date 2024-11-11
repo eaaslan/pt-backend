@@ -103,7 +103,24 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8080/api/seed/initialize
+POST https://pt-backend-42d98685b856.herokuapp.com/api/seed/initialize
 Authorization: Basic admin admin123
 Content-Type: application/json
+
+
+###
+GET https://pt-backend-42d98685b856.herokuapp.com/api/users
+Authorization: Basic admin admin123
+Content-Type: application/json
+
+###
+
+# curl -X GET https://pt-backend-42d98685b856.herokuapp.com/api/users
+#  -H "Content-Type: application/json"
+#  -H "Authorization: Basic $(echo -n 'admin:admin123' | base64)"
+GET https://pt-backend-42d98685b856.herokuapp.com/api/users
+Authorization: Basic admin admin123
+Content-Type: application/json
+
+###
 

@@ -34,7 +34,7 @@ public class Member {
     @Column(name = "email")
     private String email;
 
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Package activePackage;
 
     @Enumerated(EnumType.STRING)
@@ -43,7 +43,7 @@ public class Member {
 
     @ToString.Exclude
     @JsonIgnoreProperties
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Appointment> appointments = new ArrayList<>();
 

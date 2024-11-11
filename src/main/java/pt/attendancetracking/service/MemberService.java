@@ -22,12 +22,14 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     public List<Member> getAllMember() {
-        return memberRepository.findAll();
+        return memberRepository.findAllWithDetails();
     }
 
     public Member getMemberById(Long id) {
-        return memberRepository.findById(id).orElseThrow();
+        return memberRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
     }
+
 
     public Member getMemberByUserName(@NotBlank(message = "username cannot be blank") String username) {
         return memberRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Can not find username :" + username));
