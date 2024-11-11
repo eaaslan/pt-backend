@@ -1,16 +1,18 @@
 package pt.attendancetracking.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import pt.attendancetracking.dto.CreateMemberRequest;
+import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.service.MemberService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"})
 public class MemberController {
@@ -30,4 +32,12 @@ public class MemberController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PostMapping
+    public ResponseEntity<MemberResponse> createMember(@RequestBody CreateMemberRequest createMemberRequest) {
+        MemberResponse memberResponse = memberService.createMember(createMemberRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(memberResponse);
+    }
+
+
 }

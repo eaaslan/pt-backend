@@ -40,9 +40,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()  // Both login and register endpoints are public
+                        .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")  // Only PT and ADMIN can manage users
+                        .requestMatchers("/api/appointments/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")  // Only PT and ADMIN can manage appointments
+                        .requestMatchers("/api/seed/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/**").authenticated()  //
                 )
                 .authenticationProvider(authenticationProvider())
                 .httpBasic(basic -> basic.authenticationEntryPoint(

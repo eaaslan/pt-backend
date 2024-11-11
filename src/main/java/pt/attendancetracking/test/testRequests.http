@@ -82,3 +82,28 @@ Content-Type: application/json
 
 ###
 
+# curl -X POST http://localhost:8080/api/members
+#-H "Content-Type: application/json"
+#-u pt:pt123
+#-d '{
+#    "username": "newuser",
+#    "email": "newuser@example.com",
+#    "password": "newpassword123",
+#    "name": "New User"
+#}'
+POST http://localhost:8080/api/users
+Authorization: Basic pt pt123
+Content-Type: application/json
+
+{
+  "username": "new23usasde423r5",
+  "email": "newuse2123asd344rr@example.com",
+  "password": "newpaasdsswo23423rd1235",
+  "name": "New User"
+}
+
+###
+POST http://localhost:8080/api/seed/initialize
+Authorization: Basic admin admin123
+Content-Type: application/json
+

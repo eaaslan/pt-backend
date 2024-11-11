@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.LoginRequest;
+import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.service.MemberService;
 
@@ -69,12 +70,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerMember(@Valid @RequestBody CreateMemberRequest createMemberRequest) {
         try {
-            Member member = memberService.createMember(createMemberRequest);
+            MemberResponse member = memberService.createMember(createMemberRequest);
 
             return ResponseEntity.ok(Map.of(
 
                     "message", "registration successful",
-                    "userId", member.getId()
+                    "userId", member.id()
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
