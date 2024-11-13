@@ -7,8 +7,6 @@ GET http://localhost:8080/api/appointments/member/appointments
 Authorization: Basic admin admin123
 Content-Type: application/json
 
-
-
 ###
 
 # curl -X GET http://localhost:8080/api/member/appointments
@@ -25,12 +23,19 @@ Content-Type: application/json
 #  -H "Content-Type: application/json"
 #  -u testmember:password123
 #  -v
-GET http://localhost:8080/api/appointments/member/appointments
-Authorization: Basic testmember password123
+GET http://localhost:8080/api/appointments
+Authorization: Basic member member123
 Content-Type: application/json
 
 ###
+GET http://localhost:8080/api/appointments/pt
+Authorization: Basic trainer member123
+Content-Type: application/json
 
+
+
+
+###
 # curl -X GET http://localhost:8080/api/appointments/member/appointments
 #  -H "Content-Type: application/json"
 #  -H "Authorization: Basic dGVzdG1lbWJlcjpwYXNzd29yZDEyMw=="
@@ -107,4 +112,73 @@ Authorization: Basic bWVtYmVyOm1lbWJlcjEyMw==
 Content-Type: application/json
 
 ###
+
+### Login first to get the session cookie
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "pt",
+  "password": "pt123"
+}
+
+> {%
+    client.global.set("auth_cookie", response.headers.valueOf("Set-Cookie"));
+%}
+
+### Then use the cookie to generate link
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "pt",
+  "password": "pt123"
+}
+
+### Generate link (will use the session automatically)
+POST http://localhost:8080/api/registration/generate-link
+Content-Type: application/jsonth_cookie}}
+
+
+
+### Login (optional since you're using Basic Auth)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "pt",
+  "password": "pt123"
+}
+
+### Generate link with Basic Auth
+POST http://localhost:8080/api/registration/generate-link
+Authorization: Basic pt:pt123
+Content-Type: application/json
+
+
+###
+GET http://localhost:8080/api/users/my-package
+Authorization: Basic emmamartinez member123
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/api/registration/generate-link
+Authorization: Basic cHQ6cHQxMjM=
+Content-Type: application/json
+
+
+### Test registration with token
+POST http://localhost:8080/api/registration/register/39a355af-0127-407f-8f1c-e686e1749d9e
+Content-Type: application/json
+
+{
+  "username": "newm4embe2r",
+  "password": "passwo4rd123",
+  "name": "New Member",
+  "email": "newm4embe2r@example.com"
+}
+
+
 
