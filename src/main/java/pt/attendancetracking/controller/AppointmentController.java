@@ -7,12 +7,17 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import pt.attendancetracking.dto.AppointmentDTO;
 import pt.attendancetracking.model.Appointment;
+import pt.attendancetracking.model.Member;
 import pt.attendancetracking.service.AppointmentService;
+import pt.attendancetracking.service.MemberService;
 import pt.attendancetracking.util.CheckInRequest;
 
 import java.time.LocalDateTime;
@@ -31,6 +36,7 @@ public class AppointmentController {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentController.class);
 
     private final AppointmentService appointmentService;
+    private final MemberService memberService;
 
     //    @GetMapping("/member/appointments")
 //    @PreAuthorize("hasAuthority('ROLE_MEMBER')")
@@ -48,6 +54,25 @@ public class AppointmentController {
 //            ));
 //        }
 //    }
+
+
+    //todo another way to check auth
+    @GetMapping("/pt")
+    public ResponseEntity<List<AppointmentDTO>> getPtAppointmentsForMember() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        // Fetch member and validate
+        Member member = memberService.getMemberByUserName(username);
+        if (member.getAssignedPt() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        // Call service method to fetch appointments
+        return appointmentService.getPtAppointmentsForMember(member.getAssignedPt().getId());
+    }
+
+
     @GetMapping("/member/appointments")
     @PreAuthorize("hasRole('ROLE_MEMBER')")
     public ResponseEntity<?> getMemberAppointments(@AuthenticationPrincipal UserDetails userDetails) {
@@ -63,7 +88,9 @@ public class AppointmentController {
             }
 
             String username = userDetails.getUsername();
-            List<Appointment> appointments = appointmentService.getCurrentMemberAppointments(username);
+            List<AppointmentDTO> appointments = appointmentService
+                    .getCurrentMemberAppointments(userDetails.getUsername());
+
 
             if (appointments.isEmpty()) {
                 return ResponseEntity.ok(Map.of(
@@ -174,6 +201,10 @@ public class AppointmentController {
             ));
         }
     }
+
+    //TODO for now fetch all pts without auth specific pt
+
+
 }
 
 

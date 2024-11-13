@@ -59,12 +59,22 @@ public class MemberService {
         if (memberRepository.existsByUsername(createMemberRequest.username())) {
             throw new RuntimeException("Username already exists");
         }
+        Member assignedPt = null;
+        if (createMemberRequest.assignedPtId() != null) {
+            assignedPt = memberRepository.findById(createMemberRequest.assignedPtId())
+                    .orElseThrow(() -> new RuntimeException("Selected PT not found"));
+            if (!assignedPt.isPt()) {
+                throw new RuntimeException("Selected trainer is not a PT");
+            }
+        }
         Member member = Member.builder()
                 .email(createMemberRequest.email())
                 .username(createMemberRequest.username())
                 .name(createMemberRequest.name())
                 .password(passwordEncoder.encode(createMemberRequest.password()))
                 .role(UserRole.ROLE_MEMBER)
+                .isPt(createMemberRequest.isPt())
+                .assignedPt(assignedPt)
                 .build();
 
         Member savedMember = memberRepository.save(member);
@@ -78,6 +88,8 @@ public class MemberService {
                 member.getUsername(),
                 member.getEmail(),
                 member.getName()
+                
+
         );
     }
 }

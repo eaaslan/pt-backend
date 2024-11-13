@@ -14,6 +14,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a WHERE a.member.id = :memberId ORDER BY a.appointmentTime DESC")
     List<Appointment> findAppointmentsByMemberId(@Param("memberId") Long memberId);
 
+    @Query("SELECT DISTINCT a FROM Appointment a " +
+            "LEFT JOIN FETCH a.member m " +
+            "LEFT JOIN FETCH a.personalTrainer pt " +
+            "WHERE m.username = :username " +
+            "ORDER BY a.appointmentTime DESC")
+    List<Appointment> findAppointmentsByMemberUsername(@Param("username") String username);
+
     @Query("SELECT a.appointmentTime FROM Appointment a")
     List<LocalDateTime> appointmentsByDateTime(LocalDateTime dateTime);
 
@@ -32,6 +39,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "WHERE a.appointmentTime = :appointmentTime " +
             "AND a.status = pt.attendancetracking.model.AppointmentStatus.CHECKED_IN")
     boolean existsCheckedInAppointmentForTime(@Param("appointmentTime") LocalDateTime appointmentTime);
+
+    @Query("SELECT a FROM Appointment a WHERE a.personalTrainer.id = :ptId")
+    List<Appointment> findAppointmentsByPtId(@Param("ptId") Long ptId);
+
+    @Query("SELECT COUNT(a) > 0 FROM Appointment a " +
+            "WHERE a.personalTrainer.id = :ptId " +
+            "AND a.appointmentTime = :appointmentTime " +
+            "AND a.status != 'CANCELLED'")
+    boolean isPtBookedForTimeSlot(@Param("ptId") Long ptId,
+                                  @Param("appointmentTime") LocalDateTime appointmentTime);
 
     @Query("SELECT COUNT(a) > 0 FROM Appointment a " +
             "WHERE a.appointmentTime = :appointmentTime " +

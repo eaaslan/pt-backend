@@ -2,7 +2,9 @@ package pt.attendancetracking.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import pt.attendancetracking.dto.AppointmentDTO;
 import pt.attendancetracking.model.Appointment;
 import pt.attendancetracking.model.AppointmentStatus;
 import pt.attendancetracking.model.Member;
@@ -14,6 +16,7 @@ import pt.attendancetracking.util.TimeUtil;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static pt.attendancetracking.util.TimeUtil.getCurrentTimeInUTCPlus3;
 
@@ -51,10 +54,88 @@ public class AppointmentService {
         return appointmentRepository.findAppointmentsByMemberId(id);
     }
 
-    public List<Appointment> getCurrentMemberAppointments(String username) {
-        Member member = memberService.getMemberByUserName(username);
-        return appointmentRepository.findAppointmentsByMemberId(member.getId());
+
+    @Transactional
+    public Optional<Appointment> scheduleAppointment(Long memberId, Long ptId, LocalDateTime appointmentTime) {
+        if (!TimeUtil.isValidBusinessHour(appointmentTime)) {
+            throw new IllegalArgumentException("Appointment can only be scheduled during business hours (8 AM - 5 PM)");
+        }
+
+        // Check if PT is available at this time
+        if (appointmentRepository.isPtBookedForTimeSlot(ptId, appointmentTime)) {
+            throw new IllegalStateException("This PT is already booked for this time slot");
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found with id: " + memberId));
+
+        Member pt = memberRepository.findById(ptId)
+                .orElseThrow(() -> new IllegalArgumentException("PT not found with id: " + ptId));
+
+        if (!pt.isPt()) {
+            throw new IllegalArgumentException("Selected trainer is not a PT");
+        }
+
+        Appointment appointment = Appointment.builder()
+                .appointmentTime(appointmentTime)
+                .status(AppointmentStatus.SCHEDULED)
+                .member(member)
+                .personalTrainer(pt)
+                .build();
+
+        member.addAppointments(appointment);
+        appointmentRepository.save(appointment);
+
+        return Optional.of(appointment);
     }
+
+    @Transactional
+    public List<AppointmentDTO> getCurrentMemberAppointments(String username) {
+
+        System.out.println("Fetching appointments for username" + username);
+
+        List<Appointment> appointments = appointmentRepository
+                .findAppointmentsByMemberUsername(username);
+
+        return appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private AppointmentDTO convertToDTO(Appointment appointment) {
+        return AppointmentDTO.builder()
+                .id(appointment.getId())
+                .appointmentTime(appointment.getAppointmentTime())
+                .checkInTime(appointment.getCheckInTime())
+                .status(appointment.getStatus())
+                .memberId(appointment.getMember().getId())
+                .memberName(appointment.getMember().getName())
+                .ptId(appointment.getPersonalTrainer().getId())
+                .ptName(appointment.getPersonalTrainer().getName())
+                .build();
+    }
+
+    public ResponseEntity<List<AppointmentDTO>> getPtAppointmentsForMember(Long ptId) {
+        // Fetch appointments by PT ID
+        List<Appointment> appointments = appointmentRepository.findAppointmentsByPtId(ptId);
+
+        // Map appointments to AppointmentDTO
+        List<AppointmentDTO> appointmentDTOs = appointments.stream()
+                .map(appointment -> AppointmentDTO.builder()
+                        .id(appointment.getId())
+                        .appointmentTime(appointment.getAppointmentTime())
+                        .checkInTime(appointment.getCheckInTime())
+                        .status(appointment.getStatus())
+                        .memberId(appointment.getMember().getId())
+                        .memberName(appointment.getMember().getName())
+                        .ptId(appointment.getPersonalTrainer().getId())
+                        .ptName(appointment.getPersonalTrainer().getName())
+                        .build())
+                .toList();
+
+        return ResponseEntity.ok(appointmentDTOs);
+    }
+
 
     @Transactional
     public Optional<Appointment> scheduleAppointment(Long memberId, LocalDateTime appointmentTime) {

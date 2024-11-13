@@ -21,7 +21,7 @@ public class Appointment {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY,cascade = {
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.DETACH,
@@ -29,7 +29,11 @@ public class Appointment {
     })
     private Member member;
 
-    @Column(name = "appointment_time",nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pt_id")
+    private Member personalTrainer;
+
+    @Column(name = "appointment_time", nullable = false)
     private LocalDateTime appointmentTime;
 
     @Column(name = "checkin_time")

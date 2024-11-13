@@ -25,18 +25,20 @@ public class DataSeederService {
 
     @Transactional
     public void seedData() {
-        // Create admin and PT if they don't exist
-        createAdminAndPTIfNotExist();
+        // Create admin
+        Member admin = createAdminIfNotExist();
+
+        // Create PT
+        Member pt = createPTIfNotExist();
 
         // Create members with packages
-        List<Member> members = createMembersWithPackages();
+        List<Member> members = createMembersWithPackages(pt);
 
-        // Create appointments for members
-        createAppointments(members);
+        // Create appointments for members with PT
+        createAppointments(members, pt);
     }
 
-    private void createAdminAndPTIfNotExist() {
-        // Check and create Admin
+    private Member createAdminIfNotExist() {
         if (!memberRepository.existsByUsername("admin")) {
             Member admin = Member.builder()
                     .username("admin")
@@ -44,11 +46,14 @@ public class DataSeederService {
                     .name("Admin User")
                     .email("admin@gym.com")
                     .role(UserRole.ROLE_ADMIN)
+                    .isPt(false)
                     .build();
-            memberRepository.save(admin);
+            return memberRepository.save(admin);
         }
+        return memberRepository.findByUsername("admin").orElseThrow();
+    }
 
-        // Check and create PT
+    private Member createPTIfNotExist() {
         if (!memberRepository.existsByUsername("trainer")) {
             Member pt = Member.builder()
                     .username("trainer")
@@ -56,15 +61,17 @@ public class DataSeederService {
                     .name("Personal Trainer")
                     .email("trainer@gym.com")
                     .role(UserRole.ROLE_PT)
+                    .isPt(true)
+                    .clients(new ArrayList<>())
                     .build();
-            memberRepository.save(pt);
+            return memberRepository.save(pt);
         }
+        return memberRepository.findByUsername("trainer").orElseThrow();
     }
 
-    private List<Member> createMembersWithPackages() {
+    private List<Member> createMembersWithPackages(Member pt) {
         List<Member> members = new ArrayList<>();
 
-        // Names for more realistic test data
         List<String> firstNames = Arrays.asList("John", "Emma", "Michael", "Sophia", "William",
                 "Olivia", "James", "Ava", "Alexander", "Isabella");
         List<String> lastNames = Arrays.asList("Smith", "Johnson", "Williams", "Brown", "Jones",
@@ -79,7 +86,6 @@ public class DataSeederService {
             String fullName = firstName + " " + lastName;
             String username = (firstName + lastName).toLowerCase();
 
-            // Check if member already exists
             if (!memberRepository.existsByUsername(username)) {
                 Member member = Member.builder()
                         .username(username)
@@ -87,51 +93,51 @@ public class DataSeederService {
                         .name(fullName)
                         .email(username + "@example.com")
                         .role(UserRole.ROLE_MEMBER)
+                        .isPt(false)
+                        .assignedPt(pt)
                         .build();
 
-                // Create package with random initial values
                 Package trainingPackage = Package.builder()
                         .totalSessions(12)
-                        .usedSessions(random.nextInt(5)) // Random number of used sessions 0-4
-                        .remainingSessions(12) // Will be calculated later
+                        .usedSessions(0)
+                        .remainingSessions(12)
                         .remainingCancellations(3)
                         .status(PackageStatus.ACTIVE)
                         .build();
 
-                // Update remaining sessions
-                trainingPackage.setRemainingSessions(
-                        trainingPackage.getTotalSessions() - trainingPackage.getUsedSessions());
-
-                // Set bidirectional relationship
                 member.setActivePackage(trainingPackage);
                 trainingPackage.setMember(member);
 
-                members.add(memberRepository.save(member));
+                member = memberRepository.save(member);
+                pt.getClients().add(member);
+                members.add(member);
             }
         }
 
+        memberRepository.save(pt); // Save PT with updated client list
         return members;
     }
 
-    private void createAppointments(List<Member> members) {
-        // Create appointments starting from tomorrow
+    private void createAppointments(List<Member> members, Member pt) {
+        // Create appointments for next two weeks
         LocalDateTime startDate = LocalDateTime.now().plusDays(1)
                 .withHour(9).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endDate = startDate.plusDays(7);
+        LocalDateTime endDate = startDate.plusDays(14); // Two weeks period
 
         for (Member member : members) {
-            // Create 2 appointments per member
-            for (int i = 0; i < 2; i++) {
+            // Create 5 appointments per member
+            for (int i = 0; i < 5; i++) {
                 LocalDateTime appointmentTime = generateRandomAppointmentTime(startDate, endDate);
 
-                // Check if the time slot is available
-                while (appointmentRepository.existsByAppointmentTime(appointmentTime)) {
+                // Keep generating new time until we find an available slot
+                while (appointmentRepository.isPtBookedForTimeSlot(pt.getId(), appointmentTime) ||
+                        appointmentRepository.existsByAppointmentTime(appointmentTime)) {
                     appointmentTime = generateRandomAppointmentTime(startDate, endDate);
                 }
 
-                // Create appointment
                 Appointment appointment = Appointment.builder()
                         .member(member)
+                        .personalTrainer(pt)
                         .appointmentTime(appointmentTime)
                         .status(AppointmentStatus.SCHEDULED)
                         .build();
@@ -139,7 +145,7 @@ public class DataSeederService {
                 member.addAppointments(appointment);
                 appointmentRepository.save(appointment);
 
-                // Update package used sessions if needed
+                // Update package used sessions
                 if (member.getActivePackage() != null) {
                     Package pkg = member.getActivePackage();
                     pkg.setUsedSessions(pkg.getUsedSessions() + 1);

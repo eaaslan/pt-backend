@@ -15,7 +15,11 @@ public record CreateMemberRequest(
 
         @NotBlank(message = "Email cannot be blank")
         @Email(message = "Invalid email format")
-        String email
+        String email,
+
+        boolean isPt,
+
+        Long assignedPtId
 
 ) {
 }

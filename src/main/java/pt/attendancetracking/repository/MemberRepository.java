@@ -26,5 +26,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             "LEFT JOIN FETCH m.activePackage")
     List<Member> findAllWithDetails();
 
+    @Query("SELECT m FROM Member m WHERE m.isPt = true")
+    List<Member> findAllPersonalTrainers();
+
+    @Query("SELECT m FROM Member m WHERE m.assignedPt.id = :ptId")
+    List<Member> findAllClientsByPtId(@Param("ptId") Long ptId);
+
     boolean existsByEmail(@NotBlank(message = "Email cannot be blank") @Email(message = "Invalid email format") String email);
 }

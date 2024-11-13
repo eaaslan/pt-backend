@@ -7,13 +7,12 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Table(name = "members")
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"activePackage.member", "appointments.member"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 public class Member {
@@ -21,6 +20,18 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
+    @Column(name = "is_pt")
+    private boolean isPt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_pt_id")
+    @JsonIgnoreProperties({"clients", "appointments", "assignedPt"})
+    private Member assignedPt;
+
+    @OneToMany(mappedBy = "assignedPt")
+    @Builder.Default
+    private List<Member> clients = new ArrayList<>();
 
     @Column(name = "name")
     private String name;
@@ -35,6 +46,7 @@ public class Member {
     private String email;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("member")
     private Package activePackage;
 
     @Enumerated(EnumType.STRING)
@@ -42,7 +54,7 @@ public class Member {
     private UserRole role;
 
     @ToString.Exclude
-    @JsonIgnoreProperties
+    @JsonIgnoreProperties({"member"})
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Appointment> appointments = new ArrayList<>();
