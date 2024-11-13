@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -40,38 +41,30 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // Both login and register endpoints are public
-                        .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")  // Only PT and ADMIN can manage users
-                        .requestMatchers("/api/appointments/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")  // Only PT and ADMIN can manage appointments
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/appointments/member/**").hasRole("MEMBER")
+                        .requestMatchers("/api/users/my-package").hasRole("MEMBER")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")
                         .requestMatchers("/api/seed/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/**").authenticated()  //
+                        .requestMatchers("/api/**").authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
-                .httpBasic(basic -> basic.authenticationEntryPoint(
-                        (request, response, authException) -> {
+                .httpBasic(basic -> {
+                })  // Enable Basic Auth without custom entry point
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Invalid credentials\"}");
-                        }
-                ));
-
+                            response.getWriter().write("{\"error\": \"" + authException.getMessage() + "\"}");
+                        })
+                );
 
         logger.info("Security configuration loaded");
         return http.build();
     }
-
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("http://127.0.0.1:5500"));
-//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//        configuration.setAllowedHeaders(List.of("*"));
-//        configuration.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -80,10 +73,11 @@ public class SecurityConfig {
                 "http://localhost:5500",
                 "http://127.0.0.1:5500",
                 "http://192.168.1.13:5500",
-                "https://pt-frontend-gtju.vercel.app"// Your IP
+                "https://pt-frontend-gtju.vercel.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

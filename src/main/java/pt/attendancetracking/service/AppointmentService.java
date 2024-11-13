@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pt.attendancetracking.model.Appointment;
 import pt.attendancetracking.model.AppointmentStatus;
 import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.repository.AppointmentRepository;
 import pt.attendancetracking.repository.MemberRepository;
 import pt.attendancetracking.util.TimeUtil;
@@ -22,6 +23,25 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
+
+    public boolean isAuthorizedToViewAppointments(String username, Long requestedMemberId) {
+        Member requestingMember = memberService.getMemberByUserName(username);
+
+        // Admin can view all appointments
+        if (requestingMember.getRole() == UserRole.ROLE_ADMIN) {
+            return true;
+        }
+
+        // Personal trainers can view their clients' appointments (if you implement this feature)
+//        if (requestingMember.getRole() == UserRole.ROLE_PT) {
+//            // Add logic here if PTs should be able to view their clients' appointments
+//            return false;
+//        }
+
+        // Members can only view their own appointments
+        return requestingMember.getId().equals(requestedMemberId);
+    }
 
     public Appointment getAppointmentById(Long id) {
         return appointmentRepository.findById(id).orElseThrow();
@@ -29,6 +49,11 @@ public class AppointmentService {
 
     public List<Appointment> getMemberAllAppointment(Long id) {
         return appointmentRepository.findAppointmentsByMemberId(id);
+    }
+
+    public List<Appointment> getCurrentMemberAppointments(String username) {
+        Member member = memberService.getMemberByUserName(username);
+        return appointmentRepository.findAppointmentsByMemberId(member.getId());
     }
 
     @Transactional

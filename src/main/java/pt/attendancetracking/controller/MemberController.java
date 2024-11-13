@@ -3,10 +3,13 @@ package pt.attendancetracking.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.Package;
 import pt.attendancetracking.service.MemberService;
 
 import java.util.List;
@@ -30,6 +33,19 @@ public class MemberController {
             return ResponseEntity.ok(memberService.getMemberById(id));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/my-package")
+    public ResponseEntity<?> getMyPackage() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        try {
+            Package memberPackage = memberService.getPackageByUsername(username);
+            return ResponseEntity.ok(memberPackage);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

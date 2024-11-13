@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.Package;
 import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.repository.MemberRepository;
 
@@ -28,6 +29,17 @@ public class MemberService {
     public Member getMemberById(Long id) {
         return memberRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
+    }
+
+    public Package getPackageByUsername(String username) {
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        if (member.getActivePackage() == null) {
+            throw new RuntimeException("No active package found for this member");
+        }
+
+        return member.getActivePackage();
     }
 
 
