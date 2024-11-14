@@ -2,7 +2,6 @@ package pt.attendancetracking.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pt.attendancetracking.dto.AppointmentDTO;
 import pt.attendancetracking.model.Appointment;
@@ -102,6 +101,13 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    public List<AppointmentDTO> getPtAppointments(Long ptId) {
+        List<Appointment> appointments = appointmentRepository.findAppointmentsByPtId(ptId);
+        return appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private AppointmentDTO convertToDTO(Appointment appointment) {
         return AppointmentDTO.builder()
                 .id(appointment.getId())
@@ -115,26 +121,26 @@ public class AppointmentService {
                 .build();
     }
 
-    public ResponseEntity<List<AppointmentDTO>> getPtAppointmentsForMember(Long ptId) {
-        // Fetch appointments by PT ID
-        List<Appointment> appointments = appointmentRepository.findAppointmentsByPtId(ptId);
-
-        // Map appointments to AppointmentDTO
-        List<AppointmentDTO> appointmentDTOs = appointments.stream()
-                .map(appointment -> AppointmentDTO.builder()
-                        .id(appointment.getId())
-                        .appointmentTime(appointment.getAppointmentTime())
-                        .checkInTime(appointment.getCheckInTime())
-                        .status(appointment.getStatus())
-                        .memberId(appointment.getMember().getId())
-                        .memberName(appointment.getMember().getName())
-                        .ptId(appointment.getPersonalTrainer().getId())
-                        .ptName(appointment.getPersonalTrainer().getName())
-                        .build())
-                .toList();
-
-        return ResponseEntity.ok(appointmentDTOs);
-    }
+//    public ResponseEntity<List<AppointmentDTO>> getPtAppointmentsForMember(Long ptId) {
+//        // Fetch appointments by PT ID
+//        List<Appointment> appointments = appointmentRepository.findAppointmentsByPtId(ptId);
+//
+//        // Map appointments to AppointmentDTO
+//        List<AppointmentDTO> appointmentDTOs = appointments.stream()
+//                .map(appointment -> AppointmentDTO.builder()
+//                        .id(appointment.getId())
+//                        .appointmentTime(appointment.getAppointmentTime())
+//                        .checkInTime(appointment.getCheckInTime())
+//                        .status(appointment.getStatus())
+//                        .memberId(appointment.getMember().getId())
+//                        .memberName(appointment.getMember().getName())
+//                        .ptId(appointment.getPersonalTrainer().getId())
+//                        .ptName(appointment.getPersonalTrainer().getName())
+//                        .build())
+//                .toList();
+//
+//        return ResponseEntity.ok(appointmentDTOs);
+//    }
 
 
     @Transactional

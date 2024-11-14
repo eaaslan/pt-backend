@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.AppointmentDTO;
 import pt.attendancetracking.model.Appointment;
 import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.service.AppointmentService;
 import pt.attendancetracking.service.MemberService;
 import pt.attendancetracking.util.CheckInRequest;
@@ -56,22 +57,40 @@ public class AppointmentController {
 //    }
 
 
-    //todo another way to check auth
+    @PreAuthorize("hasAnyRole('ROLE_MEMBER', 'ROLE_PT', 'ROLE_ADMIN')")
     @GetMapping("/pt")
-    public ResponseEntity<List<AppointmentDTO>> getPtAppointmentsForMember() {
+    public ResponseEntity<List<AppointmentDTO>> getPtAppointments() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        Member member = memberService.getMemberByUserName(authentication.getName());
 
-        // Fetch member and validate
-        Member member = memberService.getMemberByUserName(username);
-        if (member.getAssignedPt() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        try {
+            Long ptId;
+            if (member.getRole() == UserRole.ROLE_PT) {
+                // PT viewing their own appointments
+                ptId = member.getId();
+                logger.debug("PT {} accessing their appointments", member.getUsername());
+            } else {
+                // Member viewing appointments with their PT
+                if (member.getAssignedPt() == null) {
+                    logger.warn("Member {} has no assigned PT", member.getUsername());
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Collections.emptyList());
+                }
+                ptId = member.getAssignedPt().getId();
+                logger.debug("Member {} accessing appointments with PT {}",
+                        member.getUsername(), member.getAssignedPt().getUsername());
+            }
+
+            List<AppointmentDTO> appointments = appointmentService.getPtAppointments(ptId);
+            return appointments.isEmpty()
+                    ? ResponseEntity.noContent().build()
+                    : ResponseEntity.ok(appointments);
+
+        } catch (Exception e) {
+            logger.error("Error fetching PT appointments: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
-
-        // Call service method to fetch appointments
-        return appointmentService.getPtAppointmentsForMember(member.getAssignedPt().getId());
     }
-
 
     @GetMapping("/member/appointments")
     @PreAuthorize("hasRole('ROLE_MEMBER')")

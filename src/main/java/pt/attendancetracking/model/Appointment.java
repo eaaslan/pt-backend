@@ -29,6 +29,8 @@ public class Appointment {
     })
     private Member member;
 
+
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pt_id")
     private Member personalTrainer;

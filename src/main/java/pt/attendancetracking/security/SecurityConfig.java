@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -41,17 +42,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .requestMatchers("/api/registration/generate-link").hasRole("PT")
-//                        .requestMatchers("/api/registration/register/**").permitAll()
-//                        .requestMatchers("/api/appointments/member/**").hasRole("MEMBER")
-//                        .requestMatchers("/api/users/my-package").hasRole("MEMBER")
-//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-//                        .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_PT", "ROLE_ADMIN")
-//                        .requestMatchers("/api/seed/**").hasAuthority("ROLE_ADMIN")
-                                .requestMatchers("/api/seed/**").hasRole("ADMIN")
-                                // All other endpoints accessible to authenticated users (who will all have PT role)
-                                .requestMatchers("/api/**").authenticated()
+                        // Public endpoints - no authentication required
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // Member endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/pt").hasAnyRole("MEMBER", "PT", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/**").hasAnyRole("MEMBER", "PT", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/my-package").hasAnyRole("MEMBER", "PT", "ADMIN")
+                        // All other endpoints accessible to PT and ADMIN
+                        .requestMatchers("/api/**").hasAnyRole("PT", "ADMIN")
+
+                        // Require authentication for any other endpoints
+                        .anyRequest().authenticated()
                 )
                 .httpBasic(basic -> {
                 })  // Enable Basic Auth without custom entry point

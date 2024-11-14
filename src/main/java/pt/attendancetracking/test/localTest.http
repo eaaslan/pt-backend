@@ -29,11 +29,13 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8080/api/appointments/pt
-Authorization: Basic trainer member123
+Authorization: Basic emmamartinez member123
 Content-Type: application/json
 
-
-
+###
+GET http://localhost:8080/api/appointments/pt
+Authorization: Basic trainer trainer123
+Content-Type: application/json
 
 ###
 # curl -X GET http://localhost:8080/api/appointments/member/appointments

@@ -14,6 +14,20 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a WHERE a.member.id = :memberId ORDER BY a.appointmentTime DESC")
     List<Appointment> findAppointmentsByMemberId(@Param("memberId") Long memberId);
 
+    @Query("SELECT a FROM Appointment a WHERE a.personalTrainer.id = :ptId")
+    List<Appointment> findAppointmentsByPtId(@Param("ptId") Long ptId);
+
+
+//    @Query("SELECT a FROM Appointment a " +
+//            "WHERE a.pt.id = :ptId " +
+//            "AND a.appointmentTime >= :startDate " +
+//            "AND a.appointmentTime < :endDate")
+//    List<Appointment> findAppointmentsByPtIdAndDateRange(
+//            @Param("ptId") Long ptId,
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate
+//    );
+
     @Query("SELECT DISTINCT a FROM Appointment a " +
             "LEFT JOIN FETCH a.member m " +
             "LEFT JOIN FETCH a.personalTrainer pt " +
@@ -40,8 +54,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "AND a.status = pt.attendancetracking.model.AppointmentStatus.CHECKED_IN")
     boolean existsCheckedInAppointmentForTime(@Param("appointmentTime") LocalDateTime appointmentTime);
 
-    @Query("SELECT a FROM Appointment a WHERE a.personalTrainer.id = :ptId")
-    List<Appointment> findAppointmentsByPtId(@Param("ptId") Long ptId);
 
     @Query("SELECT COUNT(a) > 0 FROM Appointment a " +
             "WHERE a.personalTrainer.id = :ptId " +
