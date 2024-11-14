@@ -103,6 +103,11 @@ Content-Type: application/json
 }
 
 ###
+GET https://pt-backend-42d98685b856.herokuapp.com/api/appointments
+Authorization: Basic member member123
+Content-Type: application/json
+
+###
 POST https://pt-backend-42d98685b856.herokuapp.com/api/seed/initialize
 Authorization: Basic admin admin123
 Content-Type: application/json
@@ -123,4 +128,11 @@ Authorization: Basic admin admin123
 Content-Type: application/json
 
 ###
+POST https://pt-backend-42d98685b856.herokuapp.com/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "emmajones",
+  "password": "member123"
+}
 
