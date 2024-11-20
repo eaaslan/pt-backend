@@ -1,29 +1,80 @@
 package pt.attendancetracking.service;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.model.Package;
-import pt.attendancetracking.model.UserRole;
+import pt.attendancetracking.model.PersonalTrainer;
 import pt.attendancetracking.repository.MemberRepository;
+import pt.attendancetracking.repository.PersonalTrainerRepository;
+import pt.attendancetracking.repository.UserRepository;
 
 import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
 public class MemberService {
-    public final MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
+    private final PersonalTrainerRepository ptRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<Member> getAllMember() {
-        return memberRepository.findAllWithDetails();
+    public MemberResponse createMember(CreateMemberRequest request) {
+
+        validateNewUser(request.username(), request.email());
+
+        Member member = Member.builder()
+                .username(request.username())
+                .password(passwordEncoder.encode(request.password()))
+                .name(request.name())
+                .email(request.email())
+                .build();
+
+        Member savedMember = memberRepository.save(member);
+        return mapToMemberResponse(savedMember);
+    }
+
+    @Transactional
+    public MemberResponse createMemberWithPt(CreateMemberRequest request, PersonalTrainer pt) {
+        validateNewUser(request.username(), request.email());
+
+        Member member = Member.builder()
+                .username(request.username())
+                .password(passwordEncoder.encode(request.password()))
+                .name(request.name())
+                .email(request.email())
+                .build();
+        member.setAssignedPt(pt);
+
+        Member savedMember = memberRepository.save(member);
+        return mapToMemberResponse(savedMember);
+    }
+
+    private void validateNewUser(String username, String email) {
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Username already exists");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already exists");
+        }
+    }
+
+    private MemberResponse mapToMemberResponse(Member member) {
+        return new MemberResponse(
+                member.getId(),
+                member.getUsername(),
+                member.getEmail(),
+                member.getName()
+        );
+    }
+
+    // Existing methods remain the same
+    public List<Member> getAllMembers() {
+        return memberRepository.findAllMembers();
     }
 
     public Member getMemberById(Long id) {
@@ -42,91 +93,8 @@ public class MemberService {
         return member.getActivePackage();
     }
 
-
-    public Member getMemberByUserName(@NotBlank(message = "username cannot be blank") String username) {
-        return memberRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Can not find username :" + username));
-    }
-
-    public MemberResponse createMember(@Valid CreateMemberRequest createMemberRequest) {
-        if (memberRepository.existsByUsername(createMemberRequest.username())) {
-            throw new RuntimeException("Username already exists");
-        }
-        // Check if email already exists
-        if (memberRepository.existsByEmail(createMemberRequest.email())) {
-            throw new RuntimeException("Email already exists");
-        }
-        // Check if email already exists
-        if (memberRepository.existsByUsername(createMemberRequest.username())) {
-            throw new RuntimeException("Username already exists");
-        }
-        Member assignedPt = null;
-        if (createMemberRequest.assignedPtId() != null) {
-            assignedPt = memberRepository.findById(createMemberRequest.assignedPtId())
-                    .orElseThrow(() -> new RuntimeException("Selected PT not found"));
-            if (!assignedPt.isPt()) {
-                throw new RuntimeException("Selected trainer is not a PT");
-            }
-        }
-        Member member = Member.builder()
-                .email(createMemberRequest.email())
-                .username(createMemberRequest.username())
-                .name(createMemberRequest.name())
-                .password(passwordEncoder.encode(createMemberRequest.password()))
-                .role(UserRole.ROLE_MEMBER)
-                .isPt(createMemberRequest.isPt())
-                .assignedPt(assignedPt)
-                .build();
-
-        Member savedMember = memberRepository.save(member);
-
-        return mapToMemberResponse(savedMember);
-    }
-
-    private MemberResponse mapToMemberResponse(Member member) {
-        return new MemberResponse(
-                member.getId(),
-                member.getUsername(),
-                member.getEmail(),
-                member.getName()
-
-
-        );
-    }
-
-    public MemberResponse createMemberWithPt(@Valid CreateMemberRequest createMemberRequest, @Valid Member pt) {
-
-        if (memberRepository.existsByUsername(createMemberRequest.username())) {
-            throw new RuntimeException("Username already exists");
-        }
-        // Check if email already exists
-        if (memberRepository.existsByEmail(createMemberRequest.email())) {
-            throw new RuntimeException("Email already exists");
-        }
-        // Check if email already exists
-        if (memberRepository.existsByUsername(createMemberRequest.username())) {
-            throw new RuntimeException("Username already exists");
-        }
-        Member assignedPt = null;
-        if (createMemberRequest.assignedPtId() != null) {
-            assignedPt = memberRepository.findById(pt.getId())
-                    .orElseThrow(() -> new RuntimeException("Selected PT not found"));
-            if (!assignedPt.isPt()) {
-                throw new RuntimeException("Selected trainer is not a PT");
-            }
-        }
-        Member member = Member.builder()
-                .email(createMemberRequest.email())
-                .username(createMemberRequest.username())
-                .name(createMemberRequest.name())
-                .password(passwordEncoder.encode(createMemberRequest.password()))
-                .role(UserRole.ROLE_MEMBER)
-                .isPt(false)
-                .assignedPt(pt)
-                .build();
-
-        Member savedMember = memberRepository.save(member);
-
-        return mapToMemberResponse(savedMember);
-
+    public Member getMemberByUserName(String username) {
+        return memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Member not found with username: " + username));
     }
 }

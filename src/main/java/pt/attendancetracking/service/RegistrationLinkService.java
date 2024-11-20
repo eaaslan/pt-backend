@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
-import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.PersonalTrainer;
 import pt.attendancetracking.model.RegistrationLink;
 import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.repository.RegistrationLinkRepository;
@@ -18,7 +18,7 @@ public class RegistrationLinkService {
     private final RegistrationLinkRepository registrationLinkRepository;
     private final MemberService memberService;
 
-    public String generateRegistrationLink(Member pt) {
+    public String generateRegistrationLink(PersonalTrainer pt) {
         if (!pt.getRole().equals(UserRole.ROLE_PT)) {
             throw new RuntimeException("Only PTs can generate registration links");
         }
@@ -39,11 +39,11 @@ public class RegistrationLinkService {
         RegistrationLink link = registrationLinkRepository.findByTokenAndUsedFalse(token)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired registration link"));
 
-        if (link.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Registration link has expired");
+        if (!(link.getPt() instanceof PersonalTrainer pt)) {
+            throw new RuntimeException("Invalid PT reference");
         }
 
-        MemberResponse member = memberService.createMemberWithPt(request, link.getPt());
+        MemberResponse member = memberService.createMemberWithPt(request, pt);
 
         link.setUsed(true);
         registrationLinkRepository.save(link);

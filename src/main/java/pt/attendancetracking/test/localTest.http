@@ -3,28 +3,28 @@ Authorization: Basic admin admin123
 Content-Type: application/json
 
 ###
-GET http://localhost:8080/api/appointments/member/appointments
+GET http://localhost:8080/api/appointments/user/appointments
 Authorization: Basic admin admin123
 Content-Type: application/json
 
 ###
 
-# curl -X GET http://localhost:8080/api/member/appointments
+# curl -X GET http://localhost:8080/api/user/appointments
 #  -H "Content-Type: application/json"
 #  -H "Authorization: Basic bWVtYmVyMTptZW1iZXIxMjM="
 #  -v
-GET http://localhost:8080/api/appointments/member/appointments
-Authorization: Basic member member123
+GET http://localhost:8080/api/appointments/user/appointments
+Authorization: Basic user member123
 Content-Type: application/json
 
 ###
 
-# curl -X GET http://localhost:8080/api/appointments/member/appointments
+# curl -X GET http://localhost:8080/api/appointments/user/appointments
 #  -H "Content-Type: application/json"
 #  -u testmember:password123
 #  -v
 GET http://localhost:8080/api/appointments
-Authorization: Basic member member123
+Authorization: Basic user member123
 Content-Type: application/json
 
 ###
@@ -38,31 +38,31 @@ Authorization: Basic trainer trainer123
 Content-Type: application/json
 
 ###
-# curl -X GET http://localhost:8080/api/appointments/member/appointments
+# curl -X GET http://localhost:8080/api/appointments/user/appointments
 #  -H "Content-Type: application/json"
 #  -H "Authorization: Basic dGVzdG1lbWJlcjpwYXNzd29yZDEyMw=="
 #  -v
-GET http://localhost:8080/api/appointments/member/appointments
+GET http://localhost:8080/api/appointments/user/appointments
 Authorization: Basic dGVzdG1lbWJlcjpwYXNzd29yZDEyMw==
 Content-Type: application/json
 
 ###
 
-# curl -X GET http://localhost:8080/api/appointments/member/appointments
+# curl -X GET http://localhost:8080/api/appointments/user/appointments
 #  -H "Content-Type: application/json"
 #  -u member1:password123
-GET http://localhost:8080/api/appointments/member/appointments
+GET http://localhost:8080/api/appointments/user/appointments
 Authorization: Basic emmamartinez member123
 Content-Type: application/json
 
 ###
 
-GET http://localhost:8080/api/appointments/member/appointments
+GET http://localhost:8080/api/appointments/user/appointments
 Authorization: 'Basic am9obm1hcnRpbmV6Om1lbWJlcjEyMw=='
 Content-Type: application/json
 
 ###
-GET http://localhost:8080/api/appointments/member/appointments
+GET http://localhost:8080/api/appointments/user/appointments
 Authorization: Basic emmamartinez member123
 Content-Type: application/json
 
@@ -73,7 +73,7 @@ POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "member",
+  "username": "user",
   "password": "member123"
 }
 

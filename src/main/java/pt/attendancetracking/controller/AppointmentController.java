@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -57,7 +56,6 @@ public class AppointmentController {
 //    }
 
 
-    @PreAuthorize("hasAnyRole('ROLE_MEMBER', 'ROLE_PT', 'ROLE_ADMIN')")
     @GetMapping("/pt")
     public ResponseEntity<List<AppointmentDTO>> getPtAppointments() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -93,7 +91,6 @@ public class AppointmentController {
     }
 
     @GetMapping("/member/appointments")
-    @PreAuthorize("hasRole('ROLE_MEMBER')")
     public ResponseEntity<?> getMemberAppointments(@AuthenticationPrincipal UserDetails userDetails) {
         logger.info("Attempting to get appointments for user: {}",
                 userDetails != null ? userDetails.getUsername() : "null");
@@ -169,7 +166,7 @@ public class AppointmentController {
         }
     }
 
-    @PostMapping("/check-in/{memberId}")
+    @PostMapping("/{memberId}/check-in")
     public ResponseEntity<?> checkIn(@PathVariable Long memberId, @RequestBody CheckInRequest request) {
         LocalDateTime checkInTime = request.getCheckInTime();
 

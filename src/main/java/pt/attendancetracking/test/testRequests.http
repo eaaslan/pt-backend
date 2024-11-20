@@ -18,10 +18,10 @@ https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
 # curl -X POST
 #  'https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3'
 #  -H 'Content-Type: application/json'
-#  -u 'member:member123'
+#  -u 'user:member123'
 #  -d '{"qrCode": "GYM_LOCATION_001"}'
 POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
-Authorization: Basic member member123
+Authorization: Basic user member123
 Content-Type: application/json
 
 {
@@ -33,10 +33,10 @@ Content-Type: application/json
 # curl -v -X POST
 #  'https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3'
 #  -H 'Content-Type: application/json'
-#  -u 'member:member123'
+#  -u 'user:member123'
 #  -d '{"qrCode": "GYM_LOCATION_001"}'
 POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
-Authorization: Basic member member123
+Authorization: Basic user member123
 Content-Type: application/json
 
 {
@@ -48,12 +48,12 @@ Content-Type: application/json
 # curl -v -X POST
 #  'https://pt-backend-42d98685b856.herokuapp.com/api/auth/login'
 #  -H 'Content-Type: application/json'
-#  -d '{"username": "member", "password": "member123"}'
+#  -d '{"username": "user", "password": "member123"}'
 POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
 Content-Type: application/json
 
 {
-  "username": "member",
+  "username": "user",
   "password": "member123"
 }
 
@@ -70,7 +70,7 @@ Content-Type: application/json
 # curl -X POST
 #  'http://localhost:8080/api/qr/check-in/3'
 #  -H 'Content-Type: application/json'
-#  -u 'member:member123'
+#  -u 'user:member123'
 #  -d '{"qrCode": "GYM_LOCATION_001"}'
 POST https://pt-backend-42d98685b856.herokuapp.com/api/qr/check-in/3
 Authorization: Basic admin admin123
@@ -82,7 +82,7 @@ Content-Type: application/json
 
 ###
 
-# curl -X POST http://localhost:8080/api/members
+# curl -X POST http://localhost:8080/api/users
 #-H "Content-Type: application/json"
 #-u pt:pt123
 #-d '{
@@ -104,7 +104,7 @@ Content-Type: application/json
 
 ###
 GET https://pt-backend-42d98685b856.herokuapp.com/api/appointments
-Authorization: Basic member member123
+Authorization: Basic user member123
 Content-Type: application/json
 
 ###

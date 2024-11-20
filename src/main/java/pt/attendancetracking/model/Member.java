@@ -2,71 +2,40 @@ package pt.attendancetracking.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Table(name = "members")
+//todo change member builder
 @Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@Getter
-@Setter
-public class Member {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
-    private Long id;
-
-    @Column(name = "is_pt")
-    private boolean isPt;
-
+@Table(name = "members")
+@Data
+@EqualsAndHashCode(callSuper = true, exclude = {"activePackage", "appointments"})
+@JsonIgnoreProperties({"member"})
+@ToString(exclude = {"activePackage", "appointments"})
+public class Member extends User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_pt_id")
-    @JsonIgnoreProperties({"clients", "appointments", "assignedPt"})
-    private Member assignedPt;
-
-    @OneToMany(mappedBy = "assignedPt")
-    @Builder.Default
-    private List<Member> clients = new ArrayList<>();
-
-    @Column(name = "name")
-    private String name;
-
-    @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(nullable = false, length = 120)
-    private String password;
-
-    @Column(name = "email")
-    private String email;
+    private PersonalTrainer assignedPt;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("member")
-    private Package activePackage;
+    private Package activePackage;  // This now correctly maps to Package.member
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-
-    @ToString.Exclude
-    @JsonIgnoreProperties({"member"})
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Builder.Default
     private List<Appointment> appointments = new ArrayList<>();
 
-    public void setActivePackage(Package activePackage) {
-        this.activePackage = activePackage;
-        if (activePackage != null) {
-            activePackage.setMember(this);
-        }
+    public Member() {
+        super();
     }
 
-    public void addAppointments(Appointment appointment) {
+    public static MemberBuilder builder() {
+        return new MemberBuilder();
+    }
+
+    public void addAppointment(Appointment appointment) {
         if (appointments == null) {
             appointments = new ArrayList<>();
         }
@@ -74,16 +43,47 @@ public class Member {
         appointment.setMember(this);
     }
 
-    public void removeAppointment(Appointment appointment) {
-        if (appointments != null) {
-            appointments.remove(appointment);
-            appointment.setMember(null);
-        }
-    }
+    public static class MemberBuilder {
+        private String username;
+        private String password;
+        private String name;
+        private String email;
+        private PersonalTrainer assignedPt;
 
-    @Override
-    public String toString() {
-        return String.format("Member(id=%d, name='%s', email='%s')",
-                id, name, email);
+        public MemberBuilder username(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public MemberBuilder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public MemberBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public MemberBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public MemberBuilder assignedPt(PersonalTrainer assignedPt) {
+            this.assignedPt = assignedPt;
+            return this;
+        }
+
+        public Member build() {
+            Member member = new Member();
+            member.setUsername(username);
+            member.setPassword(password);
+            member.setName(name);
+            member.setEmail(email);
+            member.setRole(UserRole.ROLE_MEMBER);
+            member.setAssignedPt(assignedPt);
+            return member;
+        }
     }
 }

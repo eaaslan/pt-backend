@@ -9,8 +9,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
-import pt.attendancetracking.model.Member;
+import pt.attendancetracking.model.PersonalTrainer;
 import pt.attendancetracking.service.MemberService;
+import pt.attendancetracking.service.PersonalTrainerService;
 import pt.attendancetracking.service.RegistrationLinkService;
 
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class PtRegistrationController {
     private final RegistrationLinkService registrationLinkService;
     private final MemberService memberService;
+    private final PersonalTrainerService personalTrainerService;
 
 
     @PreAuthorize("hasRole('ROLE_PT')")
@@ -30,7 +32,7 @@ public class PtRegistrationController {
         try {
 
             String username = userDetails.getUsername();
-            Member pt = memberService.getMemberByUserName(username);
+            PersonalTrainer pt = personalTrainerService.getPersonalTrainerByUsername(username);
             String token = registrationLinkService.generateRegistrationLink(pt);
             String registrationLink = "https://your-frontend-url/register?token=" + token;
 
