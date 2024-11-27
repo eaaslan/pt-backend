@@ -5,7 +5,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import pt.attendancetracking.dto.CreateMemberRequest;
 import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.service.MemberService;
@@ -16,10 +19,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://127.0.0.1:5500",
-        "https://pt-frontend-gtju.vercel.app"
-}, allowCredentials = "true")
 public class AuthController {
 
     //  private final AuthenticationManager authenticationManager;

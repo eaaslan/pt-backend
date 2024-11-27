@@ -19,7 +19,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/qr")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"})
 public class QrScanController {
 
     private static final String GYM_QR_CODE = "GYM_LOCATION_001";

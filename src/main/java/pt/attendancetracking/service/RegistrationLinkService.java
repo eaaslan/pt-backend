@@ -22,7 +22,6 @@ public class RegistrationLinkService {
         if (!pt.getRole().equals(UserRole.ROLE_PT)) {
             throw new RuntimeException("Only PTs can generate registration links");
         }
-
         RegistrationLink link = RegistrationLink.builder()
                 .token(UUID.randomUUID().toString())
                 .pt(pt)
