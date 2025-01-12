@@ -9,8 +9,7 @@
 //import org.springframework.security.core.userdetails.UserDetailsService;
 //import org.springframework.security.core.userdetails.UsernameNotFoundException;
 //import org.springframework.stereotype.Service;
-//import pt.attendancetracking.model.Member;
-//import pt.attendancetracking.repository.MemberRepository;
+//import pt.attendancetracking.repository.UserRepository;
 //
 //import java.util.Collections;
 //
@@ -19,24 +18,21 @@
 //public class CustomUserDetailsService implements UserDetailsService {
 //
 //    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
-//    private final MemberRepository memberRepository;
+//    private final UserRepository userRepository;
 //
 //    @Override
 //    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 //        logger.info("Attempting to load user: {}", username);
 //
-//        Member member = memberRepository.findByUsername(username)
+//        return userRepository.findByUsername(username)
+//                .map(user -> new User(
+//                        user.getUsername(),
+//                        user.getPassword(),
+//                        Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+//                ))
 //                .orElseThrow(() -> {
 //                    logger.error("User not found: {}", username);
 //                    return new UsernameNotFoundException("User not found: " + username);
 //                });
-//
-//        logger.info("User found: {}. Role: {}", username, member.getRole());
-//
-//        return new User(
-//                member.getUsername(),
-//                member.getPassword(),
-//                Collections.singletonList(new SimpleGrantedAuthority(member.getRole().name()))
-//        );
 //    }
 //}

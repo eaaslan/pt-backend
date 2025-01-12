@@ -17,6 +17,27 @@ public class AttendanceTrackingApplication {
 
     }
 
+//    @Bean
+//    CommandLineRunner passwordMigration(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+//        return args -> {
+//            // Get all users
+//            var users = userRepository.findAll();
+//
+//            // Update passwords for each user
+//            for (User user : users) {
+//                // Check if password is not already encoded (doesn't start with $2a$)
+//                if (!user.getPassword().startsWith("$2a$")) {
+//                    // Encode the plain text password
+//                    String encodedPassword = passwordEncoder.encode(user.getPassword());
+//                    user.setPassword(encodedPassword);
+//                    userRepository.save(user);
+//                    System.out.println("Updated password for user: " + user.getUsername());
+//                }
+//            }
+//
+//            System.out.println("Password migration completed!");
+//        };
+//    }
 
 //    @Bean
 //    CommandLineRunner initUsers(MemberRepository memberRepository, PasswordEncoder encoder) {

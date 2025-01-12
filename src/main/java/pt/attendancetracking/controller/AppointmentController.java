@@ -4,231 +4,191 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.AppointmentDTO;
 import pt.attendancetracking.model.Appointment;
 import pt.attendancetracking.model.Member;
-import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.service.AppointmentService;
 import pt.attendancetracking.service.MemberService;
+import pt.attendancetracking.service.PersonalTrainerService;
 import pt.attendancetracking.util.CheckInRequest;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-
+@RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
-@RestController
 public class AppointmentController {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentController.class);
-
-    private final AppointmentService appointmentService;
     private final MemberService memberService;
+    private final AppointmentService appointmentService;
+    private final PersonalTrainerService personalTrainerService;
 
-    //    @GetMapping("/member/appointments")
-//    @PreAuthorize("hasAuthority('ROLE_MEMBER')")
-//    public ResponseEntity<?> getMemberAppointments(@AuthenticationPrincipal UserDetails userDetails) {
-//        System.out.println("User authorities: " + userDetails.getAuthorities());
-//        try {
-//            String username = userDetails.getUsername();
-//            List<Appointment> appointments = appointmentService.getCurrentMemberAppointments(username);
-//            return appointments.isEmpty()
-//                    ? ResponseEntity.noContent().build()
-//                    : ResponseEntity.ok(appointments);
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(Map.of(
-//                    "error", "Error retrieving appointments: " + e.getMessage()
-//            ));
-//        }
-//    }
-
-
-    @GetMapping("/pt")
-    public ResponseEntity<List<AppointmentDTO>> getPtAppointments() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = memberService.getMemberByUserName(authentication.getName());
-
+    /**
+     * Get appointments for the currently authenticated user
+     * Works for both members and PTs, returning appropriate appointments based on role
+     */
+    @GetMapping("/member/current")
+    public ResponseEntity<?> getCurrentUserAppointments(@AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Long ptId;
-            if (member.getRole() == UserRole.ROLE_PT) {
-                // PT viewing their own appointments
-                ptId = member.getId();
-                logger.debug("PT {} accessing their appointments", member.getUsername());
-            } else {
-                // Member viewing appointments with their PT
-                if (member.getAssignedPt() == null) {
-                    logger.warn("Member {} has no assigned PT", member.getUsername());
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Collections.emptyList());
-                }
-                ptId = member.getAssignedPt().getId();
-                logger.debug("Member {} accessing appointments with PT {}",
-                        member.getUsername(), member.getAssignedPt().getUsername());
-            }
+            String username = userDetails.getUsername();
+            List<AppointmentDTO> appointments = appointmentService.getCurrentMemberAppointments(username);
 
+            return ResponseEntity.ok(Map.of(
+                    "appointments", appointments,
+                    "total", appointments.size()
+            ));
+        } catch (Exception e) {
+            logger.error("Error fetching appointments: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+    /**
+     * Get PT appointments for the assigned member
+     */
+    @GetMapping("/pt/current")
+    public ResponseEntity<?> getCurrentMembersPtAppointments(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Member member = memberService.getMemberByUserName(userDetails.getUsername());
+            Long ptId = member.getAssignedPt().getId();
             List<AppointmentDTO> appointments = appointmentService.getPtAppointments(ptId);
             return appointments.isEmpty()
                     ? ResponseEntity.noContent().build()
                     : ResponseEntity.ok(appointments);
-
         } catch (Exception e) {
             logger.error("Error fetching PT appointments: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping("/member/appointments")
-    public ResponseEntity<?> getMemberAppointments(@AuthenticationPrincipal UserDetails userDetails) {
-        logger.info("Attempting to get appointments for user: {}",
-                userDetails != null ? userDetails.getUsername() : "null");
-        logger.info("User authorities: {}",
-                userDetails != null ? userDetails.getAuthorities() : "null");
-
+    /**
+     * Get appointments for a specific member (requires PT or Admin role)
+     */
+    @GetMapping("/member/{memberId}")
+    public ResponseEntity<?> getMemberAppointments(
+            @PathVariable Long memberId,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            if (userDetails == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Authentication required"));
-            }
-
-            String username = userDetails.getUsername();
-            List<AppointmentDTO> appointments = appointmentService
-                    .getCurrentMemberAppointments(userDetails.getUsername());
-
-
-            if (appointments.isEmpty()) {
-                return ResponseEntity.ok(Map.of(
-                        "message", "No appointments found",
-                        "appointments", Collections.emptyList()
-                ));
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Appointments retrieved successfully",
-                    "appointments", appointments,
-                    "totalAppointments", appointments.size(),
-                    "member", username
-            ));
-
-        } catch (UsernameNotFoundException e) {
-            logger.error("Member not found: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Member not found"));
+            List<Appointment> appointments = appointmentService.getMemberAllAppointment(memberId);
+            return appointments.isEmpty()
+                    ? ResponseEntity.noContent().build()
+                    : ResponseEntity.ok(appointments);
         } catch (Exception e) {
-            logger.error("Error retrieving appointments: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error retrieving appointments: " + e.getMessage()));
+            logger.error("Error fetching member appointments: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Appointment>> getAppointments(
-            @RequestParam(required = false) Long memberId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    /**
+     * Get appointments for a specific PT (requires PT or Admin role)
+     */
+    @GetMapping("/pt/{ptId}")
+    public ResponseEntity<?> getPtAppointments(@PathVariable Long ptId) {
         try {
-            if (memberId != null) {
-                List<Appointment> appointments = appointmentService.getMemberAllAppointment(memberId);
-                return appointments.isEmpty()
-                        ? ResponseEntity.noContent().build()
-                        : ResponseEntity.ok(appointments);
-            }
-
-            String username = userDetails.getUsername();
-
-            // Could add getAllAppointments() here if needed
-            return ResponseEntity.noContent().build();
+            List<AppointmentDTO> appointments = appointmentService.getPtAppointments(ptId);
+            return appointments.isEmpty()
+                    ? ResponseEntity.noContent().build()
+                    : ResponseEntity.ok(appointments);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            logger.error("Error fetching PT appointments: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // GET /api/appointments/{appointmentId}
+    /**
+     * Get a specific appointment by ID
+     */
     @GetMapping("/{appointmentId}")
-    public ResponseEntity<Appointment> getAppointment(@PathVariable Long appointmentId) {
+    public ResponseEntity<?> getAppointment(@PathVariable Long appointmentId) {
         try {
             Appointment appointment = appointmentService.getAppointmentById(appointmentId);
             return ResponseEntity.ok(appointment);
         } catch (Exception e) {
+            logger.error("Error fetching appointment: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PostMapping("/{memberId}/check-in")
-    public ResponseEntity<?> checkIn(@PathVariable Long memberId, @RequestBody CheckInRequest request) {
-        LocalDateTime checkInTime = request.getCheckInTime();
-
-        System.out.println(checkInTime);
-        try {
-            Optional<Appointment> appointment = appointmentService.checkIn(memberId, checkInTime);
-
-            return appointment
-                    .map(a -> ResponseEntity.ok(Map.of(
-                            "message", "Check-in successful",
-                            "appointment", a,
-                            "checkInTime", a.getCheckInTime()
-                    )))
-                    .orElse(ResponseEntity.badRequest().body(Map.of(
-                            "error", "Check-in failed"
-                    )));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", e.getMessage()
-            ));
-        }
-    }
-
-    @PostMapping("/{memberId}/book")
+    /**
+     * Schedule a new appointment
+     */
+    @PostMapping("/schedule/{memberId}")
     public ResponseEntity<?> scheduleAppointment(
             @PathVariable Long memberId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime appointmentTime) {
         try {
-            Optional<Appointment> appointment = appointmentService.scheduleAppointment(memberId, appointmentTime);
-            return appointment
-                    .map(a ->
-                            ResponseEntity.ok(Map.of(
-                                    "message", "schedule is successful"
-                                    , "appointment", a,
-                                    "appointmentTime", a.getAppointmentTime()
-
-                            ))
-                    ).orElse(ResponseEntity.badRequest().body(Map.of(
-                                    "error", "check-in failed"
-                            ))
-
-                    );
-
+            return appointmentService.scheduleAppointment(memberId, appointmentTime)
+                    .map(appointment -> ResponseEntity.ok(Map.of(
+                            "message", "Appointment scheduled successfully",
+                            "appointment", appointment
+                    )))
+                    .orElse(ResponseEntity.badRequest().body(Map.of(
+                            "error", "Failed to schedule appointment"
+                    )));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", e.getMessage()
-            ));
+            logger.error("Error scheduling appointment: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    //TODO for now fetch all pts without auth specific pt
+    /**
+     * Check in for an appointment (requires PT or Admin role)
+     */
+    @PostMapping("/check-in/{memberId}")
+    public ResponseEntity<?> checkIn(
+            @PathVariable Long memberId,
+            @RequestBody CheckInRequest request) {
+        try {
+            return appointmentService.checkIn(memberId, request.getCheckInTime())
+                    .map(appointment -> ResponseEntity.ok(Map.of(
+                            "message", "Check-in successful",
+                            "appointment", appointment
+                    )))
+                    .orElse(ResponseEntity.badRequest().body(Map.of(
+                            "error", "Check-in failed"
+                    )));
+        } catch (RuntimeException e) {
+            logger.error("Error during check-in: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
 
+    // TODO  check if it works
+
+    /**
+     * Check in for an appointment
+     */
+    @PostMapping("/check-in/member/{memberId}")
+    public ResponseEntity<?> checkIn(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody CheckInRequest request) {
+        try {
+            //todo check which one is
+            // or Authentication authentication = SecurityContextHolder.getContext().getAuthentication(); just add this
+
+            String userName = userDetails.getUsername();
+            Long memberId = memberService.getMemberByUserName(userName).getId();
+            return appointmentService.checkIn(memberId, request.getCheckInTime())
+                    .map(appointment -> ResponseEntity.ok(Map.of(
+                            "message", "Check-in successful",
+                            "appointment", appointment
+                    )))
+                    .orElse(ResponseEntity.badRequest().body(Map.of(
+                            "error", "Check-in failed"
+                    )));
+        } catch (RuntimeException e) {
+            logger.error("Error during check-in: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
 
 

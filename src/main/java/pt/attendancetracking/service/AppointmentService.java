@@ -5,10 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pt.attendancetracking.dto.AppointmentDTO;
-import pt.attendancetracking.model.Appointment;
-import pt.attendancetracking.model.AppointmentStatus;
-import pt.attendancetracking.model.Member;
-import pt.attendancetracking.model.PersonalTrainer;
+import pt.attendancetracking.model.Package;
+import pt.attendancetracking.model.*;
 import pt.attendancetracking.repository.AppointmentRepository;
 import pt.attendancetracking.repository.MemberRepository;
 import pt.attendancetracking.repository.PersonalTrainerRepository;
@@ -27,7 +25,9 @@ import static pt.attendancetracking.util.TimeUtil.getCurrentTimeInUTCPlus3;
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
     private final PersonalTrainerRepository ptRepository;
+
 
     public List<AppointmentDTO> getCurrentMemberAppointments(String username) {
         List<Appointment> appointments = appointmentRepository
@@ -40,7 +40,7 @@ public class AppointmentService {
     @Transactional
     public Optional<Appointment> checkIn(Long memberId, LocalDateTime checkInTime) {
         LocalDateTime currentTime = checkInTime != null ? checkInTime : getCurrentTimeInUTCPlus3();
-
+        Member member = memberService.getMemberById(memberId);
         if (!TimeUtil.isValidBusinessHour(currentTime)) {
             throw new RuntimeException("Check-in is only allowed during business hours (9 AM - 22 PM)");
         }
@@ -55,8 +55,22 @@ public class AppointmentService {
                 .findAppointmentByMemberAndTimeScheduledStatus(memberId, roundedTime)
                 .orElseThrow(() -> new RuntimeException("No scheduled appointment found"));
 
+        Package activePackage = member.getActivePackage();
+        if (activePackage == null) {
+            throw new RuntimeException("Member does not have an active package");
+        }
+
+        // Attempt to use a session from the package
+        try {
+            if (!activePackage.useSession()) {
+                throw new RuntimeException("No remaining sessions in the package");
+            }
+        } catch (IllegalStateException e) {
+            throw new RuntimeException("Cannot check in: " + e.getMessage());
+        }
         appointment.setCheckInTime(currentTime);
         appointment.setStatus(AppointmentStatus.CHECKED_IN);
+
 
         return Optional.of(appointmentRepository.save(appointment));
     }

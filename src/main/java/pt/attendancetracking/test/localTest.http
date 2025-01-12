@@ -124,9 +124,6 @@ Content-Type: application/json
   "password": "pt123"
 }
 
-> {%
-    client.global.set("auth_cookie", response.headers.valueOf("Set-Cookie"));
-%}
 
 ### Then use the cookie to generate link
 ### Login
@@ -182,5 +179,37 @@ Content-Type: application/json
   "email": "newm4embe2r@example.com"
 }
 
+###
+GET http://localhost:8090/api/appointments/member/appointments
+Authorization: Basic emmamiller member123
+Content-Type: application/json
 
+###
+###
+GET http://localhost:8090/api/appointments/member/current
+Authorization: Basic emmamartinez member123
+Content-Type: application/json
 
+### Get current member's appointments
+GET http://localhost:8090/api/appointments/member/current
+Authorization: Basic emmajones member123
+Content-Type: application/json
+
+### Test 1: Get Current Member's Appointments (as regular member)
+POST http://localhost:8090/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "emmamiller",
+  "password": "member123"
+}
+
+### Get current member's appointments
+GET http://localhost:8090/api/appointments/member/current
+Authorization: Basic emmamiller member123
+Content-Type: application/json
+
+### Try to get PT appointments (should fail gracefully)
+GET http://localhost:8090/api/appointments/pt/current
+Authorization: Basic emmamiller member123
+Content-Type: application/json

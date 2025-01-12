@@ -9,6 +9,7 @@ import pt.attendancetracking.dto.MemberResponse;
 import pt.attendancetracking.model.Member;
 import pt.attendancetracking.model.Package;
 import pt.attendancetracking.model.PersonalTrainer;
+import pt.attendancetracking.model.UserRole;
 import pt.attendancetracking.repository.MemberRepository;
 import pt.attendancetracking.repository.PersonalTrainerRepository;
 import pt.attendancetracking.repository.UserRepository;
@@ -48,6 +49,11 @@ public class MemberService {
                 .name(request.name())
                 .email(request.email())
                 .build();
+
+        // Set the role explicitly
+        member.setRole(UserRole.ROLE_MEMBER);
+
+        // Assign the PT
         member.setAssignedPt(pt);
 
         Member savedMember = memberRepository.save(member);

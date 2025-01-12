@@ -3,8 +3,8 @@ package pt.attendancetracking.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import pt.attendancetracking.dto.*;
 import pt.attendancetracking.model.Member;
@@ -21,6 +21,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    //todo just for pt and a admins
     @GetMapping
     public ResponseEntity<List<MemberDTO>> getMembers() {
         List<Member> members = memberService.getAllMembers();
@@ -30,6 +31,7 @@ public class MemberController {
         return ResponseEntity.ok(memberDTOs);
     }
 
+    //todo just for pt and a admins
     @GetMapping("/{id}")
     public ResponseEntity<MemberDTO> getMemberById(@PathVariable Long id) {
         try {
@@ -70,9 +72,8 @@ public class MemberController {
     }
 
     @GetMapping("/my-package")
-    public ResponseEntity<?> getMyPackage() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+    public ResponseEntity<?> getMyPackage(@AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
 
         try {
             Package memberPackage = memberService.getPackageByUsername(username);

@@ -1,0 +1,48 @@
+
+### MEMBER ###
+### Test 1: Get Current Member's Appointments (as regular member)
+POST http://localhost:8090/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "emmamiller",
+  "password": "member123"
+}
+
+### Get current member's appointments
+GET http://localhost:8090/api/appointments/member/current
+Authorization: Basic emmamiller member123
+Content-Type: application/json
+
+### Try to get Member's PT appointments ()
+GET http://localhost:8090/api/appointments/pt/current
+Authorization: Basic emmamiller member123
+Content-Type: application/json
+
+### Get current member's package
+GET http://localhost:8090/api/users/my-package
+Authorization: Basic emmamiller member123
+Content-Type: application/json
+
+##############################################################################################
+
+
+### Generate Registration Link (PT User) - Success Case
+POST http://localhost:8090/api/registration/generate-link
+Authorization: Basic trainer trainer123
+Content-Type: application/json
+
+### Register New Member with Valid Token
+POST http://localhost:8090/api/registration/register/f57d172c-ecc4-4d23-ae03-0a8d463c0ca7
+Content-Type: application/json
+
+{
+  "username": "newmember1",
+  "password": "password123",
+  "name": "New Member",
+  "email": "newmember1@example.com",
+  "isPt": false,
+  "assignedPtId": null
+}
+
+

@@ -23,7 +23,7 @@ public class RegistrationLink {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pt_id", nullable = false)
-    private User pt;
+    private PersonalTrainer pt;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;

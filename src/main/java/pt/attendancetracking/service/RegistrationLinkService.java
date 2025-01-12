@@ -38,14 +38,21 @@ public class RegistrationLinkService {
         RegistrationLink link = registrationLinkRepository.findByTokenAndUsedFalse(token)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired registration link"));
 
-        if (!(link.getPt() instanceof PersonalTrainer pt)) {
-            throw new RuntimeException("Invalid PT reference");
+        // Check if the link has expired
+        if (link.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Registration link has expired");
         }
 
+        // Get the PT from the link
+        PersonalTrainer pt = link.getPt();
+
+        // Create the member with the assigned PT
         MemberResponse member = memberService.createMemberWithPt(request, pt);
 
+        // Mark the link as used
         link.setUsed(true);
         registrationLinkRepository.save(link);
+
 
         return member;
     }
